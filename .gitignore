@@ -2,6 +2,9 @@
 ## .gitignore
 ## ---------------------------------------------------------
 
+# Using Don't version control SQLite database files
+*.db
+
 # Ignore emacs temporary files
 *~
 \#*\#
