@@ -5,6 +5,7 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash
 from werkzeug.security import check_password_hash
 from flask_login import UserMixin
+from hashlib import md5
 
 from app import db
 from app import login
@@ -36,6 +37,17 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
+
+    def avatar(self, size):
+        """Get the avator for the user registered at 'Gravatar'
+        (http://en.gravatar.com/).  A random 'identicon' avatar is
+        generated for users that do not have an avatar registered with
+        the service.
+
+        """
+        digest = md5(self.email.lower().encode('utf-8')).hexdigest()
+        return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(
+            digest, size)
 
 
 class Post(db.Model):
