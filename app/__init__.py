@@ -1,11 +1,13 @@
 
+import os
+
 from flask import Flask
 from config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 import logging
-from logging.handlers import SMTPHandler
+from logging.handlers import SMTPHandler, RotatingFileHandler
 
 # Application
 app = Flask(__name__)
@@ -31,9 +33,36 @@ login.login_view = 'login'
 # have to be imported at the end to avoid circular imports
 from app import routes, models, errors
 
-# Log errors by email
-if not app.debug:
-    # Enable the email logger only when not in debug mode
+# ==================
+# Set up logging
+# ------------------
+
+def setup_file_log_handler():
+    """Logging to log files"""
+
+    if not os.path.exists('logs'):
+        os.mkdir('logs')
+
+    # Rotating log files:
+    # - log file: logs/riji.log
+    # - Max log file size: 10KB
+    # - Max number of log files: 10
+    file_handler = RotatingFileHandler('logs/riji.log', 
+                                       maxBytes=10240,
+                                       backupCount=10)
+
+    # Log message formatter: 
+    # timestamp, log level, message, source file, line number
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
+
+    # Log level for log files: INFO
+    file_handler.setLevel(logging.INFO)
+
+    app.logger.addHandler(file_handler)
+
+def setup_email_log_handler():
+    """Log ERRORs by email"""
 
     if app.config['MAIL_SERVER']:
         # Only when the mail server is specified in the environment
@@ -49,11 +78,26 @@ if not app.debug:
         mail_handler = SMTPHandler(
             mailhost    = (app.config['MAIL_SERVER'], app.config['MAIL_PORT']),
             fromaddr    = 'no-reply@' + app.config['MAIL_SERVER'],
-            toaddrs     = app.config['ADMINS'], subject='Microblog Failure',
+            toaddrs     = app.config['ADMINS'], subject='Riji Failure',
             credentials = auth, 
             secure      = secure
         )
         mail_handler.setLevel(logging.ERROR)
         app.logger.addHandler(mail_handler)
 
+# (only when not in debug mode)
+if not app.debug:
+
+    # Setup logging to log files
+    setup_file_log_handler()
+
+    # Setup logging via email
+    setup_email_log_handler()
+
+    # Set log level to INFO
+    app.logger.setLevel(logging.INFO)
+
+    # A first startup INFO log message
+    app.logger.info('Riji startup')
+    
 ## fin.
