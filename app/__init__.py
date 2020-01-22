@@ -27,6 +27,6 @@ login.login_view = 'login'
 
 # Routes and models 
 # have to be imported at the end to avoid circular imports
-from app import routes, models
+from app import routes, models, errors
 
-# fin.
+## fin.
