@@ -19,6 +19,18 @@ def load_user(id):
     return User.query.get(int(id))
 
 
+# Auxiliary table 'followers'
+# to define the many-to-many relationship between 
+# following users 'followers' and followed users 'followed'
+# Since this auxiliary table has no data other than the foreign keys, 
+# it is created without an associated model class.
+# The table has to be defined befor its usage in class User.
+followers = db.Table('followers',
+    db.Column('follower_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
+)
+
+
 class User(UserMixin, db.Model):
     """
     Uses the UserMixin which implements flask_login's login procedure.
@@ -60,6 +72,5 @@ class Post(db.Model):
 
     def __repr__(self):
         return '<Post {}>'.format(self.body)
-
 
 ## fin.
