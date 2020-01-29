@@ -38,13 +38,24 @@ def index():
     posts = current_user.followed_posts().paginate(
         page, app.config['POSTS_PER_PAGE'], False)
 
+    # Get links to the previous and next page
+    prev_url = url_for('index', page=posts.prev_num) \
+        if posts.has_prev else None
+    next_url = url_for('index', page=posts.next_num) \
+        if posts.has_next else None
+
     # Redirecting to the same page
     # to avoid resubmission of posted content
     # resulting in duplicate posts
     # See:
     #   - Post/Redirect/Get
     #     https://en.wikipedia.org/wiki/Post/Redirect/Get
-    return render_template('index.html', title='Home', form=form, posts=posts.items)
+    return render_template('index.html',
+                           title='Home',
+                           form=form,
+                           posts=posts.items,
+                           prev_url=prev_url,
+                           next_url=next_url)
 
 @app.route('/explore')
 @login_required
@@ -52,7 +63,15 @@ def explore():
     page = request.args.get('page', 1, type=int)
     posts = Post.query.order_by(Post.timestamp.desc()).paginate(
         page, app.config['POSTS_PER_PAGE'], False)
-    return render_template("index.html", title='Explore', posts=posts.items)
+    next_url = url_for('explore', page=posts.next_num) \
+        if posts.has_next else None
+    prev_url = url_for('explore', page=posts.prev_num) \
+        if posts.has_prev else None
+    return render_template("index.html",
+                           title='Explore',
+                           posts=posts.items,
+                           prev_url=prev_url,
+                           next_url=next_url)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
