@@ -35,7 +35,13 @@ def index():
     #   - Post/Redirect/Get
     #     https://en.wikipedia.org/wiki/Post/Redirect/Get
     return render_template("index.html", title='Home Page', form=form, posts=posts)
-        
+
+@app.route('/explore')
+@login_required
+def explore():
+    posts = Post.query.order_by(Post.timestamp.desc()).all()
+    return render_template('index.html', title='Explore', posts=posts)
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     # Cooperates with load_user() function 
