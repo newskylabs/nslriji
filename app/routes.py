@@ -26,20 +26,14 @@ def index():
         db.session.commit()
         flash('Your post is now live!')
         return redirect(url_for('index'))
-    posts = [
-        {
-            'author': {'username': 'Peter'},
-            'body': 'Hello from New York!'
-        },
-        {
-            'author': {'username': 'Maria'},
-            'body': "Let's meet in Paris!"
-        },
-        {
-            'author': {'username': 'Nina'},
-            'body': "Great trip to China!"
-        }
-    ]
+    posts = current_user.followed_posts().all()
+
+    # Redirecting to the same page
+    # to avoid resubmission of posted content
+    # resulting in duplicate posts
+    # See:
+    #   - Post/Redirect/Get
+    #     https://en.wikipedia.org/wiki/Post/Redirect/Get
     return render_template("index.html", title='Home Page', form=form, posts=posts)
         
 @app.route('/login', methods=['GET', 'POST'])
