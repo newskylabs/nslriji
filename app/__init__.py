@@ -1,13 +1,14 @@
 
 import os
-
+import logging
+from logging.handlers import SMTPHandler, RotatingFileHandler
 from flask import Flask
-from config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
-import logging
-from logging.handlers import SMTPHandler, RotatingFileHandler
+from flask_mail import Mail
+
+from config import Config
 
 # Application
 app = Flask(__name__)
@@ -29,9 +30,8 @@ login = LoginManager(app)
 # to the login page for pages which can only be seen after logging in.
 login.login_view = 'login'
 
-# Routes and models 
-# have to be imported at the end to avoid circular imports
-from app import routes, models, errors
+# Flask-Mail instance
+mail = Mail(app)
 
 # ==================
 # Set up logging
@@ -99,5 +99,9 @@ if not app.debug:
 
     # A first startup INFO log message
     app.logger.info('Riji startup')
+
+# Routes and models 
+# have to be imported at the end to avoid circular imports
+from app import routes, models, errors
     
 ## fin.
