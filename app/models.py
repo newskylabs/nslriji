@@ -1,14 +1,12 @@
 ## Database Models
 
-
 from datetime import datetime
-from werkzeug.security import generate_password_hash
-from werkzeug.security import check_password_hash
-from flask_login import UserMixin
 from hashlib import md5
-
-from app import db
-from app import login
+from time import time
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+import jwt
+from app import app, db, login
 
 
 @login.user_loader
@@ -90,6 +88,45 @@ class User(UserMixin, db.Model):
         own = Post.query.filter_by(user_id=self.id)
         return followed.union(own).order_by(Post.timestamp.desc())
 
+    def get_reset_password_token(self, expires_in=600):
+
+        # Reset password data
+        payload = { 
+            'reset_password': self.id, 
+            'exp':            time() + expires_in
+        }
+
+        # Generate the JWT token
+        token = jwt.encode(
+            payload,
+            app.config['SECRET_KEY'], 
+            algorithm='HS256'
+        )
+
+        # Convert from byte sequence to string
+        tokenstr = token.decode('utf-8')
+
+        return tokenstr
+
+    @staticmethod
+    def verify_reset_password_token(token):
+
+        try:
+            # Extract the reset password data
+            payload = jwt.decode(
+                token, 
+                app.config['SECRET_KEY'],
+                algorithms=['HS256']
+            )
+
+            # Get the password
+            id = payload['reset_password']
+
+        except:
+            return
+
+        return User.query.get(id)
+    
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
