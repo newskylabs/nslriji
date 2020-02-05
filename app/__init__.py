@@ -8,6 +8,7 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_bootstrap import Bootstrap
+from flask_moment import Moment
 
 from config import Config
 
@@ -36,6 +37,10 @@ mail = Mail(app)
 
 # Flask-Bootstrap
 bootstrap = Bootstrap(app)
+
+# Flask-Moment
+# For adjusting the time informations to the local time
+moment = Moment(app)
 
 # ==================
 # Set up logging
