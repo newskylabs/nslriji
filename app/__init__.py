@@ -9,7 +9,7 @@ from flask_login import LoginManager
 from flask_mail import Mail
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
-from flask_babel import Babel
+from flask_babel import Babel, lazy_gettext as _l
 
 from config import Config
 
@@ -32,6 +32,9 @@ login = LoginManager(app)
 # Needed to automatically redirect users which have not logged in yet
 # to the login page for pages which can only be seen after logging in.
 login.login_view = 'login'
+
+# Login message (overwriting the default to get localization)
+login.login_message = _l('Please log in to access this page.')
 
 # Flask-Mail instance
 mail = Mail(app)
