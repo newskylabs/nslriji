@@ -2,13 +2,14 @@
 import os
 import logging
 from logging.handlers import SMTPHandler, RotatingFileHandler
-from flask import Flask
+from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
+from flask_babel import Babel
 
 from config import Config
 
@@ -41,6 +42,10 @@ bootstrap = Bootstrap(app)
 # Flask-Moment
 # For adjusting the time informations to the local time
 moment = Moment(app)
+
+# Flask-Babel
+# i18n and l10n support
+babel = Babel(app)
 
 # ==================
 # Set up logging
@@ -108,6 +113,13 @@ if not app.debug:
 
     # A first startup INFO log message
     app.logger.info('Riji startup')
+
+
+@babel.localeselector
+def get_locale():
+    locale = request.accept_languages.best_match(app.config['LANGUAGES'])
+    return locale
+
 
 # Routes and models 
 # have to be imported at the end to avoid circular imports
