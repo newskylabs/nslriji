@@ -121,6 +121,11 @@ if not app.debug:
 @babel.localeselector
 def get_locale():
     locale = request.accept_languages.best_match(app.config['LANGUAGES'])
+    # DEBUG translations
+    # Either set language preference of browser
+    # or forse language by uncommenting one of the following:
+    #| locale = 'es' # Debug Spanish translation
+    #| locale = 'de' # Debug German translation
     return locale
 
 
