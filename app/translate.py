@@ -11,14 +11,14 @@
 #| 
 #|     if 'TRANSLATION_CREDENTIALS' not in app.config or \
 #|             not app.config['TRANSLATION_CREDENTIALS']:
-#|         return _('Error: the translation service is not configured.')
+#|         return _('ERROR The translation service is not configured.')
 #|     auth = {'Ocp-Apim-Subscription-Key': app.config['TRANSLATION_CREDENTIALS']}
 #|     r = requests.get('https://api.microsofttranslator.com/v2/Ajax.svc'
 #|                      '/Translate?text={}&from={}&to={}'.format(
 #|                          text, source_language, target_language),
 #|                      headers=auth)
 #|     if r.status_code != 200:
-#|         return _('Error: the translation service failed.')
+#|         return _('ERROR The translation service failed.')
 #|     return json.loads(r.content.decode('utf-8-sig'))
 #| 
 ## =========================================================
@@ -78,7 +78,7 @@ def translate(string, source_language, target_language):
     text = [ string ]
 
     # Translate
-    translated_text = translate(text, source_language, target_language)
+    translated_text = translate_text(text, source_language, target_language)
 
     # List of strings to string
     translation = ' '.join(translated_text)
