@@ -287,7 +287,7 @@ def translate_text():
     translation = translate(
         request.form['text'],
         request.form['source_language'],
-        request.form['dest_language']
+        request.form['target_language']
     )
 
     # Jsonify
