@@ -28,9 +28,11 @@ class Config(object):
     # Supported languages
     LANGUAGES = ['en', 'es']
 
+    # Translation API
+    GOOGLE_TRANSLATION_PROJECT_ID  = os.environ.get('GOOGLE_TRANSLATION_PROJECT_ID')
+    GOOGLE_APPLICATION_CREDENTIALS = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+
     # Page layout
     POSTS_PER_PAGE = 10
-
-
 
 ## fin.
