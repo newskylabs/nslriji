@@ -7,7 +7,7 @@
 #| from flask_babel import _
 #| from app import app
 #| 
-#| def translate_ms(text, source_language, dest_language):
+#| def translate_ms(text, source_language, target_language):
 #| 
 #|     if 'TRANSLATION_CREDENTIALS' not in app.config or \
 #|             not app.config['TRANSLATION_CREDENTIALS']:
@@ -15,7 +15,7 @@
 #|     auth = {'Ocp-Apim-Subscription-Key': app.config['TRANSLATION_CREDENTIALS']}
 #|     r = requests.get('https://api.microsofttranslator.com/v2/Ajax.svc'
 #|                      '/Translate?text={}&from={}&to={}'.format(
-#|                          text, source_language, dest_language),
+#|                          text, source_language, target_language),
 #|                      headers=auth)
 #|     if r.status_code != 200:
 #|         return _('Error: the translation service failed.')
@@ -29,7 +29,7 @@ from google.cloud import translate as google_translate
 from app import app
 
 
-def translate(text, source_language, dest_language):
+def translate_text(text, source_language, target_language):
     """Translating Text."""
 
     # See:
@@ -51,10 +51,6 @@ def translate(text, source_language, dest_language):
     project_id = app.config['GOOGLE_TRANSLATION_PROJECT_ID']
     client = google_translate.TranslationServiceClient()
     parent = client.location_path(project_id, "global")
-    # For parameter 'text' either strings of list of strings are accepted.
-    # The 'contents' parameter, however, has to be a list of strings
-    if isinstance(text, str):
-        text = [ text ]
 
     # Detail on supported types can be found here:
     # https://cloud.google.com/translate/docs/supported-formats
@@ -63,7 +59,7 @@ def translate(text, source_language, dest_language):
         contents             = text,
         mime_type            = "text/plain",  # mime types: text/plain, text/html
         source_language_code = source_language,
-        target_language_code = dest_language,
+        target_language_code = target_language,
     )
 
     # Extract translations
@@ -74,4 +70,20 @@ def translate(text, source_language, dest_language):
 
     return translated_text
         
+
+def translate(string, source_language, target_language):
+    """Translating Text."""
+
+    # String to list of strings
+    text = [ string ]
+
+    # Translate
+    translated_text = translate(text, source_language, target_language)
+
+    # List of strings to string
+    translation = ' '.join(translated_text)
+
+    return translation
+
+
 ## fin.
