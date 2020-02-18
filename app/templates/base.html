@@ -1,7 +1,7 @@
 {% extends 'bootstrap/base.html' %}
 
 {% block title %}
-    {% if title %}{{ title }} - Diary{% else %}{{ _('Welcome to Diary!') }}{% endif %}
+    {% if title %}{{ title }} - Diary{% else %}{{ _('Welcome to my Diary!') }}{% endif %}
 {% endblock %}
 
 {% block navbar %}
@@ -53,4 +53,18 @@
     {{ super() }}
     {{ moment.include_moment() }}
     {{ moment.lang(g.locale) }}
+    <script>
+        function translate(sourceElem, targetElem, sourceLang, targetLang) {
+            $(targetElem).html('<img src="{{ url_for('static', filename='loading.gif') }}">');
+            $.post('/translate', {
+                text: $(sourceElem).text(),
+                source_language: sourceLang,
+                target_language: targetLang
+            }).done(function(response) {
+                $(targetElem).text(response['text'])
+            }).fail(function() {
+                $(targetElem).text("{{ _('ERROR Could not contact server.') }}");
+            });
+        }
+    </script>
 {% endblock %}
