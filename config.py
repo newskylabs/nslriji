@@ -29,6 +29,9 @@ class Config(object):
     LANGUAGES = ['en', 'es']
 
     # Translation API
+    # When using the MS translation service:
+    #| MS_TRANSLATOR_KEY = os.environ.get('MS_TRANSLATOR_KEY')
+    # When using the google translation API:
     GOOGLE_TRANSLATION_PROJECT_ID  = os.environ.get('GOOGLE_TRANSLATION_PROJECT_ID')
     GOOGLE_APPLICATION_CREDENTIALS = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
 
