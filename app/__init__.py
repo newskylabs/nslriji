@@ -2,7 +2,8 @@
 import os
 import logging
 from logging.handlers import SMTPHandler, RotatingFileHandler
-from flask import Flask, request
+
+from flask import Flask, request, current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
@@ -13,46 +14,9 @@ from flask_babel import Babel, lazy_gettext as _l
 
 from config import Config
 
-# Application
-app = Flask(__name__)
-
-# Use the application config
-app.config.from_object(Config)
-
-# Database
-db = SQLAlchemy(app)
-
-# Database migration engine
-migrate = Migrate(app, db)
-
-# Login Manager
-login = LoginManager(app)
-
-# Login route
-# Needed to automatically redirect users which have not logged in yet
-# to the login page for pages which can only be seen after logging in.
-login.login_view = 'login'
-
-# Login message (overwriting the default to get localization)
-login.login_message = _l('Please log in to access this page.')
-
-# Flask-Mail instance
-mail = Mail(app)
-
-# Flask-Bootstrap
-bootstrap = Bootstrap(app)
-
-# Flask-Moment
-# For adjusting the time informations to the local time
-moment = Moment(app)
-
-# Flask-Babel
-# i18n and l10n support
-babel = Babel(app)
-
-# ==================
-# Set up logging
-# ------------------
+## =========================================================
+## Utilities
+## ---------------------------------------------------------
 
 def setup_file_log_handler():
     """Logging to log files"""
@@ -76,51 +40,121 @@ def setup_file_log_handler():
     # Log level for log files: INFO
     file_handler.setLevel(logging.INFO)
 
-    app.logger.addHandler(file_handler)
+    return file_handler
 
-def setup_email_log_handler():
+    
+def setup_email_log_handler(config):
     """Log ERRORs by email"""
 
-    if app.config['MAIL_SERVER']:
-        # Only when the mail server is specified in the environment
+    auth = None
+    if config['MAIL_USERNAME'] or config['MAIL_PASSWORD']:
+        auth = (config['MAIL_USERNAME'], config['MAIL_PASSWORD'])
 
-        auth = None
-        if app.config['MAIL_USERNAME'] or app.config['MAIL_PASSWORD']:
-            auth = (app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
+    secure = None
+    if config['MAIL_USE_TLS']:
+        secure = ()
 
-        secure = None
-        if app.config['MAIL_USE_TLS']:
-            secure = ()
+    mail_handler = SMTPHandler(
+        mailhost    = (config['MAIL_SERVER'], config['MAIL_PORT']),
+        fromaddr    = 'no-reply@' + config['MAIL_SERVER'],
+        toaddrs     = config['ADMINS'], subject='Riji Failure',
+        credentials = auth, 
+        secure      = secure
+    )
+    mail_handler.setLevel(logging.ERROR)
 
-        mail_handler = SMTPHandler(
-            mailhost    = (app.config['MAIL_SERVER'], app.config['MAIL_PORT']),
-            fromaddr    = 'no-reply@' + app.config['MAIL_SERVER'],
-            toaddrs     = app.config['ADMINS'], subject='Riji Failure',
-            credentials = auth, 
-            secure      = secure
-        )
-        mail_handler.setLevel(logging.ERROR)
-        app.logger.addHandler(mail_handler)
+    return mail_handler
 
-# (only when not in debug mode)
-if not app.debug:
 
-    # Setup logging to log files
-    setup_file_log_handler()
+## =========================================================
+## Components
+## ---------------------------------------------------------
 
-    # Setup logging via email
-    setup_email_log_handler()
+# Database
+db = SQLAlchemy()
 
-    # Set log level to INFO
-    app.logger.setLevel(logging.INFO)
+# Database migration engine
+migrate = Migrate()
 
-    # A first startup INFO log message
-    app.logger.info('Riji startup')
+# Login Manager
+login = LoginManager()
+
+# Login route
+# Needed to automatically redirect users which have not logged in yet
+# to the login page for pages which can only be seen after logging in.
+login.login_view = 'auth.login'
+
+# Login message (overwriting the default to get localization)
+login.login_message = _l('Please log in to access this page.')
+
+# Flask-Mail instance
+mail = Mail()
+
+# Flask-Bootstrap
+bootstrap = Bootstrap()
+
+# Flask-Moment
+# For adjusting the time informations to the local time
+moment = Moment()
+
+# Flask-Babel
+# i18n and l10n support
+babel = Babel()
+
+
+def create_app(config_class=Config):
+
+    # Application
+    app = Flask(__name__)
+
+    # Application config
+    app.config.from_object(config_class)
+    
+    # Init components
+    db.init_app(app)
+    migrate.init_app(app, db)
+    login.init_app(app)
+    mail.init_app(app)
+    bootstrap.init_app(app)
+    moment.init_app(app)
+    babel.init_app(app)
+
+    # Register blueprints
+    from app.errors import bp as errors_bp
+    app.register_blueprint(errors_bp)
+
+    from app.auth import bp as auth_bp
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+
+    from app.main import bp as main_bp
+    app.register_blueprint(main_bp)
+
+    # Setup log handlers
+    # when neither in debug nor test mode
+    if not app.debug and not app.testing:
+
+        # Setup logging to log files
+        file_handler = setup_file_log_handler()
+        app.logger.addHandler(file_handler)
+
+        # Setup logging via email
+        # when the mail server is specified in the environment
+        if app.config['MAIL_SERVER']:
+            mail_handler = setup_email_log_handler(app.config)
+            app.logger.addHandler(mail_handler)
+
+        # Set log level to INFO
+        app.logger.setLevel(logging.INFO)
+
+        # A first startup INFO log message
+        app.logger.info('Riji startup')
+
+    return app
 
 
 @babel.localeselector
 def get_locale():
-    locale = request.accept_languages.best_match(app.config['LANGUAGES'])
+    locale = request.accept_languages.best_match(current_app.config['LANGUAGES'])    
     # DEBUG translations
     # Either set language preference of browser
     # or forse language by uncommenting one of the following:
@@ -129,8 +163,9 @@ def get_locale():
     return locale
 
 
-# Routes and models 
+# Import models 
 # have to be imported at the end to avoid circular imports
-from app import routes, models, errors
+from app import models
     
+
 ## fin.

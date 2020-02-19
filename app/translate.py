@@ -4,15 +4,15 @@
 #| 
 #| import json
 #| import requests
+#| from flask import current_app
 #| from flask_babel import _
-#| from app import app
 #| 
-#| def translate_ms(text, source_language, target_language):
+#| def translate(text, source_language, target_language):
 #| 
-#|     if 'TRANSLATION_CREDENTIALS' not in app.config or \
-#|             not app.config['TRANSLATION_CREDENTIALS']:
+#|     if 'MS_TRANSLATOR_KEY' not in current_app.config or \
+#|             not current_app.config['MS_TRANSLATOR_KEY']:
 #|         return _('ERROR The translation service is not configured.')
-#|     auth = {'Ocp-Apim-Subscription-Key': app.config['TRANSLATION_CREDENTIALS']}
+#|     auth = {'Ocp-Apim-Subscription-Key': current_app.config['MS_TRANSLATOR_KEY']}
 #|     r = requests.get('https://api.microsofttranslator.com/v2/Ajax.svc'
 #|                      '/Translate?text={}&from={}&to={}'.format(
 #|                          text, source_language, target_language),
@@ -26,7 +26,7 @@
 ## ---------------------------------------------------------
 
 from google.cloud import translate as google_translate
-from app import app
+from flask import current_app
 
 
 def translate_text(text, source_language, target_language):
@@ -44,11 +44,11 @@ def translate_text(text, source_language, target_language):
     # has to be set to the path of the file containing the google application cedentials.
 
     # Get project ID
-    if 'GOOGLE_TRANSLATION_PROJECT_ID' not in app.config or \
-       not app.config['GOOGLE_TRANSLATION_PROJECT_ID']:
+    if 'GOOGLE_TRANSLATION_PROJECT_ID' not in current_app.config or \
+       not current_app.config['GOOGLE_TRANSLATION_PROJECT_ID']:
         return _('ERROR The translation service is not configured.')
 
-    project_id = app.config['GOOGLE_TRANSLATION_PROJECT_ID']
+    project_id = current_app.config['GOOGLE_TRANSLATION_PROJECT_ID']
     client = google_translate.TranslationServiceClient()
     parent = client.location_path(project_id, "global")
 
