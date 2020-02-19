@@ -2,6 +2,9 @@
 ## .gitignore
 ## ---------------------------------------------------------
 
+# !!! Do not commit the .env file !!!
+.env
+
 # Using Don't version control SQLite database files
 *.db
 
