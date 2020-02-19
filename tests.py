@@ -10,29 +10,60 @@
 
 from datetime import datetime, timedelta
 import unittest
-from app import app, db
+from app import create_app, db
 from app.models import User, Post
+from config import Config
+
+
+class TestConfig(Config):
+    """Create a test configuration."""
+
+    TESTING = True
+
+    # Overwriting the base class application configuration 
+    # for 'SQLALCHEMY_DATABASE_URI' with 'sqlite://'
+    # to make SQLAlchemy use an in-memory SQLite database 
+    # for testing.
+    SQLALCHEMY_DATABASE_URI = 'sqlite://'
 
 
 class UserModelCase(unittest.TestCase):
 
     def setUp(self):
-        """Create a test database."""
 
-        # Overwriting the application configuration 
-        # for 'SQLALCHEMY_DATABASE_URI' with 'sqlite://'
-        # to make SQLAlchemy use an in-memory SQLite database 
-        # for testing.
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
+        # Create a test application
+        self.app = create_app(TestConfig)
 
-        # Create all the database tables.
+        # A shortcut to the application context
+        self.app_context = self.app.app_context()
+
+        # Make the current application accessible to the test
+        # functions via the 'current_app' proxy variable.
+        # 
+        # When handling a request, the current application is made
+        # available to the active thread via the proxy variable
+        # 'current_app' by pushing the respective application context.
+        # To make the application available outside of a request - in
+        # this case for the test functions - this has to be done
+        # manually.
+        self.app_context.push()
+
+        # NOTE: When Flask's 'request', 'session', or 'current_user'
+        # variables are needed, a request context also has to be
+        # activated as well by pushing it.
+
+        # Create the database tables
         db.create_all()
 
     def tearDown(self):
-        """Delete the test database."""
 
         db.session.remove()
+
+        # Delete the test database
         db.drop_all()
+
+        # Pop the application context
+        self.app_context.pop()
 
     def test_password_hashing(self):
         u = User(username='susan')
