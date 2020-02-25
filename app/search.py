@@ -12,8 +12,8 @@ def add_to_index(index, model):
     payload = {}
     for field in model.__searchable__:
         payload[field] = getattr(model, field)
-    print("DEBUG add_to_index():\n  - index: {}\n  - id: {}\n  - body: {}" \
-          .format(index, model.id, payload))
+    #| print("DEBUG add_to_index():\n  - index: {}\n  - id: {}\n  - body: {}" \
+    #|       .format(index, model.id, payload))
     current_app.elasticsearch.index(index=index, id=model.id, body=payload)
 
 
@@ -24,8 +24,8 @@ def remove_from_index(index, model):
     if not current_app.elasticsearch:
         return
     
-    print("DEBUG remove_from_index():\n  - index: {}\n  - id: {}" \
-          .format(index, model.id))
+    #| print("DEBUG remove_from_index():\n  - index: {}\n  - id: {}" \
+    #|       .format(index, model.id))
     current_app.elasticsearch.delete(index=index, id=model.id)
 
 
@@ -45,10 +45,10 @@ def query_index(index, query, page, per_page):
             'from': (page - 1) * per_page, 'size': per_page}
 
     # Search the given index
-    print("DEBUG query_index():\n  - index: {}\n  - body: {}" \
-          .format(index, body))
+    #| print("DEBUG query_index():\n  - index: {}\n  - body: {}" \
+    #|       .format(index, body))
     search = current_app.elasticsearch.search(index=index, body=body)
-    print("DEBUG search:", search)
+    #| print("DEBUG search:", search)
 
     # Extract ids and number of results.
     # The ids have to be extracted from the list of hits.
