@@ -6,7 +6,7 @@ from flask_login import current_user, login_required
 from flask_babel import _, get_locale
 from guess_language import guess_language
 from app import db
-from app.main.forms import EditProfileForm, PostForm
+from app.main.forms import EditProfileForm, PostForm, SearchForm
 from app.models import User, Post
 from app.translate import translate
 from app.main import bp
@@ -14,11 +14,38 @@ from app.main import bp
 
 @bp.before_app_request
 def before_request():
-    """Remember when the user was last seen."""
-    if current_user.is_authenticated:
-        current_user.last_seen = datetime.utcnow()
-        db.session.commit()
+    """Set locale.
+
+    When user is logged in: Remember when the user was last seen and
+    create search form instance.
+
+    """
+    # Set locale 
+    # 
+    # By adding it to g, the instance persists through the life of the
+    # whole request: g is specific to each request and each client.
     g.locale = str(get_locale())
+
+    # User authenticated?
+    if current_user.is_authenticated:
+
+        # Remember when the user was last seen
+        current_user.last_seen = datetime.utcnow()
+
+        # Commit the current_user with the new value for last_seen
+        # 
+        # NOTE that db.session.add(current_user) is not necessary here
+        # as by referencing current_user in
+        # current_user.is_authenticated Flask-Login invokes the user
+        # loader callback function, which runs a database query that
+        # puts the target user in the database session.
+        db.session.commit()
+
+        # Create search form instance
+        # 
+        # By adding it to g, the instance persists through the life of
+        # the whole request.
+        g.search_form = SearchForm()
 
 
 @bp.route('/', methods=['GET', 'POST'])
@@ -176,6 +203,33 @@ def translate_text():
     json = jsonify({'text': translation})
 
     return json
+
+
+@bp.route('/search')
+@login_required
+def search():
+
+    # When submitted an empty search form has been submitted, 
+    # redirect to the explore page.
+    if not g.search_form.validate():
+        return redirect(url_for('main.explore'))
+
+    # Calculate result page to be shown 
+    page = request.args.get('page', 1, type=int)
+
+    # Search
+    posts, total = Post.search(g.search_form.q.data, page,
+                               current_app.config['POSTS_PER_PAGE'])
+
+    # Generate next and previous page links
+    next_url = url_for('main.search', q=g.search_form.q.data, page=page + 1) \
+        if total > page * current_app.config['POSTS_PER_PAGE'] else None
+    prev_url = url_for('main.search', q=g.search_form.q.data, page=page - 1) \
+        if page > 1 else None
+
+    # Render page
+    return render_template('search.html', title=_('Search'), posts=posts,
+                           next_url=next_url, prev_url=prev_url)
 
 
 ## fin.

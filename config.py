@@ -38,6 +38,9 @@ class Config(object):
     GOOGLE_TRANSLATION_PROJECT_ID  = os.environ.get('GOOGLE_TRANSLATION_PROJECT_ID')
     GOOGLE_APPLICATION_CREDENTIALS = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
 
+    # Elasticsearch
+    ELASTICSEARCH_URL = os.environ.get('ELASTICSEARCH_URL')
+
     # Page layout
     POSTS_PER_PAGE = 10
 
