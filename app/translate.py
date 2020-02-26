@@ -27,6 +27,7 @@
 
 from google.cloud import translate as google_translate
 from flask import current_app
+from flask_babel import _
 
 
 def translate_text(text, source_language, target_language):
