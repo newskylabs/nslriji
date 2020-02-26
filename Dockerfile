@@ -21,7 +21,15 @@
 ## 
 ## To debug it use:
 ## 
-##   docker run --name riji -p 8000:5000 --rm -ti riji:latest
+##   docker run --name riji -p 8000:5000 --rm riji:latest
+## 
+## To list the running containers use:
+## 
+##   docker ps
+## 
+## To stop the riji container use:
+## 
+##   docker stop riji
 ## 
 ## When the container is run locally riji can be accessed at:
 ## 
